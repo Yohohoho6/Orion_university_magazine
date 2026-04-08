@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@plugin "./hero.js";
+@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
+@variant dark (&:where(.dark, .dark *));
+:root {
+  --herooui-primary-50: #e6f0ff;
+  --herooui-primary-100: #b3d1ff;
+  --herooui-primary-200: #80b3ff;
+  --herooui-primary-300: #4d94ff;
+  --herooui-primary-400: #1a75ff;
+  --herooui-primary-500: #1e3a8a;
+  --herooui-primary-600: #1a315e;
+  --herooui-primary-700: #162848;
+  --herooui-primary-800: #121f32;
+  --herooui-primary-900: #0e151c;
+  --herooui-primary-foreground: #ffffff;
+  --primary: #1e3a8a;
+  --primary-foreground: #ffffff;
+  --sidebar-bg: #1e3a8a;
+  --sidebar-text: #ffffff;
+  --sidebar-text-muted: rgba(255,255,255,0.6);
+  --sidebar-hover: rgba(255,255,255,0.08);
+  --sidebar-active: rgba(255,255,255,0.12);
+  --topbar-bg: #ffffff;
+  --topbar-border: #f0f0f0;
+  --topbar-text: #6b7280;
+  --topbar-text-bold: #111827;
+  --content-bg: #f8fafc;
+  --notif-btn-bg: #ffffff;
+  --notif-btn-border: #f0f0f0;
+  --notif-btn-hover: #d1d5db;
+  --notif-icon: #4b5563;
+  --color-text-1: #111827;
+  --color-text-2: #374151;
+  --color-text-3: #6b7280;
+  --color-border-3: #e5e7eb;
+  --color-surface-raised: #ffffff;
+  --beacon-color: #FFFDD0;
+}
+
+.dark {
+  --herooui-primary-50: #eff6ff;
+  --herooui-primary-100: #dbeafe;
+  --herooui-primary-200: #bfdbfe;
+  --herooui-primary-300: #93c5fd;
+  --herooui-primary-400: #60a5fa;
+  --herooui-primary-500: #3b82f6;
+  --herooui-primary-600: #2563eb;
+  --herooui-primary-700: #1d4ed8;
+  --herooui-primary-800: #1e40af;
+  --herooui-primary-900: #1e3a8a;
+  --herooui-primary-foreground: #ffffff;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #f1f5f9;
+  --sidebar-text-muted: rgba(241,245,249,0.6);
+  --sidebar-hover: rgba(255,255,255,0.08);
+  --sidebar-active: rgba(255,255,255,0.12);
+  --topbar-bg: #1e293b;
+  --topbar-border: #334155;
+  --topbar-text: #94a3b8;
+  --topbar-text-bold: #f1f5f9;
+  --content-bg: #0f172a;
+  --notif-btn-bg: #1e293b;
+  --notif-btn-border: #334155;
+  --notif-btn-hover: #475569;
+  --notif-icon: #94a3b8;
+  --color-text-1: #f1f5f9;
+  --color-text-2: #cbd5e1;
+  --color-text-3: #94a3b8;
+  --color-border-3: #334155;
+  --color-surface-raised: #1e293b;
+  --beacon-color: #ffffff;
+}
+
+.dark body {
+  background-color: #0f172a;
+}
+
+body {
+  font-family: "Inter Variable", sans-serif;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
