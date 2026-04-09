@@ -101,7 +101,7 @@ export function Chatbot() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-[1.05rem] leading-tight font-sans">
-                    Orioin Bot
+                    Orion Bot
                   </h3>
                   <p className="text-xs text-blue-100 font-medium font-sans">
                     Ask me anything
