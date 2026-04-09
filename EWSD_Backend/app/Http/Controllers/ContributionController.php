@@ -741,11 +741,12 @@ class ContributionController extends Controller
         }
         
         if (now()->lt($activeYear->final_closure_date)) {
-        return response()->json([
-            'message' => 'Download is only allowed after final closure date.'
-        ], 403);
-        // Optional status filter, defaults to 'selected'
-        $status = $request->get('status', 'selected');
+            return response()->json([
+                'message' => 'Download is only allowed after final closure date.'
+            ], 403);
+        }
+
+        $status = 'selected'; // Only allow downloading selected contributions
         
         // Validate faculty exists
         $faculty = Faculty::find($facultyId);
@@ -776,23 +777,35 @@ class ContributionController extends Controller
         }
         
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            foreach ($contributions as $contribution) {
-                $filePath = storage_path('app/public/' . $contribution->file_path);
-                if (file_exists($filePath)) {
-                    // Add file to ZIP with contribution title as filename for clarity
-                    $originalName = pathinfo($contribution->file_path, PATHINFO_BASENAME);
-                    $contributionTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $contribution->title);
-                    $zip->addFile($filePath, $contributionTitle . '_' . $originalName);
-                }
-            }
-            $zip->close();
+        $zipOpenResult = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        
+        if ($zipOpenResult !== TRUE) {
+            return response()->json([
+                'message' => 'Failed to create ZIP file. Error code: ' . $zipOpenResult
+            ], 500);
         }
         
-        // Return the file and delete it after sending to keep the server clean
+        $filesAdded = 0;
+        foreach ($contributions as $contribution) {
+            $filePath = storage_path('app/public/' . $contribution->file_path);
+            if ($contribution->file_path && Storage::disk('public')->exists($contribution->file_path)) {
+                $originalName = pathinfo($contribution->file_path, PATHINFO_BASENAME);
+                $contributionTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $contribution->title);
+                $zip->addFile($filePath, $contributionTitle . '_' . $originalName);
+                $filesAdded++;
+            }
+        }
+        
+        $zip->close();
+        
+        if ($filesAdded === 0) {
+            return response()->json([
+                'message' => 'No files found for the selected contributions',
+                'files_found' => 0
+            ], 404);
+        }
+        
         return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
-    }
-
     }
 
     public function syncAutoReject(Request $request): JsonResponse
