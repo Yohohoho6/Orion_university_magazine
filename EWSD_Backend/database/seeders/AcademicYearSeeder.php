@@ -19,37 +19,42 @@ class AcademicYearSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $academicYears = [
+
             [
-                'name' => 'Academic Year 2023-2024',
-                'start_date' => Carbon::create(2023, 9, 1),
-                'end_date' => Carbon::create(2024, 6, 30),  
-                'closure_date' => Carbon::create(2024, 3, 15),
-                'final_closure_date' => Carbon::create(2024, 3, 30),
-                'is_active' => false, // Past academic year
+                'name' => 'Academic Year 2024',
+                'start_date' => Carbon::create(2024, 1, 1),
+                'end_date' => Carbon::create(2024, 12, 31),
+                'closure_date' => Carbon::create(2024, 11, 30),
+                'final_closure_date' => Carbon::create(2024, 12, 15),
+                'is_active' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
             [
-                'name' => 'Academic Year 2024-2025',
-                'start_date' => Carbon::create(2024, 9, 1), 
-                'end_date' => Carbon::create(2025, 6, 30),  
-                'closure_date' => Carbon::create(2025, 3, 14), 
-                'final_closure_date' => Carbon::create(2025, 3, 28),
-                'is_active' => false, 
+                'name' => 'Academic Year 2025',
+                'start_date' => Carbon::create(2025, 1, 1),
+                'end_date' => Carbon::create(2025, 12, 31),
+                'closure_date' => Carbon::create(2025, 11, 30),
+                'final_closure_date' => Carbon::create(2025, 12, 15),
+                'is_active' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
             [
-                'name' => 'Academic Year 2025-2026',
-                'start_date' => Carbon::create(2025, 9, 1), 
-                'end_date' => Carbon::create(2026, 6, 30),  
-                'closure_date' => Carbon::create(2026, 4, 30), 
-                'final_closure_date' => Carbon::create(2026, 5, 30), 
-                'is_active' => true, 
+                'name' => 'Academic Year 2026',
+                'start_date' => Carbon::create(2026, 1, 1),
+                'end_date' => Carbon::create(2026, 12, 31),
+                'closure_date' => Carbon::create(2026, 11, 30),
+                'final_closure_date' => Carbon::create(2026, 12, 15),
+                'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
         ];
+ 
 
         foreach ($academicYears as $year) {
             AcademicYear::create($year);
