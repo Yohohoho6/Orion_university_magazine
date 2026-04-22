@@ -268,7 +268,7 @@ const SidebarContent = ({ menuItems, onClose }) => {
           </div>
           <div className="sb-logo-text">
             <span className="sb-brand">
-              Orioin<span className="sb-brand-mag">University</span>
+              Orion<span className="sb-brand-mag">University</span>
             </span>
             <span className="sb-tagline">Dashboard</span>
           </div>
