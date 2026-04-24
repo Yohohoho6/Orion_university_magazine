@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contribution;
-use App\Models\Category;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -34,28 +34,66 @@ class ChatbotController extends Controller
     
     public function chat(Request $request)
     {
+        $authUser = $this->resolveAuthenticatedUser($request);
+        $userId = $authUser?->id;
+        $userName = $authUser?->name;
+
         try {
             $request->validate([
                 'message' => 'required|string',
             ]);
 
             $message = $request->message;
-            $userId = Auth::id();
             
             // Check for user-specific queries (database queries)
-            if ($this->isUserSpecificQuery($message)) {
-                return $this->handleUserSpecificQuery($message, $userId);
-            }
-            
-            // Use Ollama AI for intelligent responses
-            return $this->getOllamaResponse($message, $userId);
+            $response = $this->isUserSpecificQuery($message)
+                ? $this->handleUserSpecificQuery($message, $userId)
+                : $this->getOllamaResponse($message, $userId);
+
+            return $this->personalizeReply($response, $userName);
             
         } catch (\Exception $e) {
             Log::error('Chatbot Error: ' . $e->getMessage());
-            return response()->json([
+            return $this->personalizeReply(response()->json([
                 'reply' => "I'm here to help! You can ask me about submitting contributions, checking status, or any questions about our magazine system. (Note: AI service is initializing, please try again in a moment.)"
-            ]);
+            ]), $userName);
         }
+    }
+
+    private function resolveAuthenticatedUser(Request $request)
+    {
+        // This route is public, so explicitly try Sanctum token auth as fallback.
+        return Auth::user()
+            ?? Auth::guard('sanctum')->user()
+            ?? $request->user('sanctum');
+    }
+
+    private function personalizeReply(JsonResponse $response, ?string $userName): JsonResponse
+    {
+        $data = $response->getData(true);
+
+        if (!isset($data['reply']) || !is_string($data['reply'])) {
+            return $response;
+        }
+
+        $data['reply'] = $this->replaceNamePlaceholders($data['reply'], $userName);
+        return $response->setData($data);
+    }
+
+    private function replaceNamePlaceholders(string $reply, ?string $userName): string
+    {
+        $resolvedName = trim((string) $userName);
+        if ($resolvedName === '') {
+            return $reply;
+        }
+
+        $patterns = [
+            '/\[\s*(?:your|user)\s+name(?:\s+here)?\s*\]/i',
+            '/\{\s*(?:your|user)\s+name(?:\s+here)?\s*\}/i',
+            '/<\s*(?:your|user)\s+name(?:\s+here)?\s*>/i',
+        ];
+
+        return preg_replace($patterns, $resolvedName, $reply) ?? $reply;
     }
     
     private function getOllamaResponse($message, $userId)

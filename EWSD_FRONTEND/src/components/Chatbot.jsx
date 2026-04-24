@@ -2,8 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LuMessageSquare, LuX, LuSend, LuBot, LuUser } from "react-icons/lu";
 import { axiosInstance } from "../api/axios-instance";
+import { useAuth } from "@/context/AuthContext";
 
 export function Chatbot() {
+  const { user } = useAuth();
+  const displayUserName = user?.name?.trim() || "You";
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -138,7 +141,7 @@ export function Chatbot() {
                     )}
                     {msg.sender === "user" && (
                       <div className="flex items-center justify-end gap-2 mb-1 text-xs text-blue-200 font-medium">
-                        You <LuUser size={12} />
+                        {displayUserName} <LuUser size={12} />
                       </div>
                     )}
                     <div className="whitespace-pre-wrap">{msg.text}</div>
