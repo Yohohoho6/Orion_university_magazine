@@ -16,10 +16,11 @@ import {
 } from "react-icons/lu";
 
 const TwoFactorAuth = () => {
+  const OTP_LENGTH = 6;
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "";
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
   const [error, setError] = useState("");
 
@@ -34,17 +35,24 @@ const TwoFactorAuth = () => {
     }
   }, [resendCooldown]);
 
-  const handleVerify = (e) => {
-    e.preventDefault();
-    setError("");
+  const verifyCode = (code) => {
+    const normalizedCode = (code || "").replace(/\D/g, "").slice(0, OTP_LENGTH);
 
-    if (otp.length !== 6) {
+    if (isVerifying) return;
+
+    if (normalizedCode.length !== OTP_LENGTH) {
       setError("Please enter a valid 6-digit OTP");
       return;
     }
 
+    if (!email) {
+      setError("Email is missing. Please login again.");
+      return;
+    }
+
+    setError("");
     verify2FA(
-      { email, code: otp },
+      { email, code: normalizedCode },
       {
         onError: (err) => {
           setError(err?.response?.data?.message || "Invalid OTP. Please try again.");
@@ -53,26 +61,32 @@ const TwoFactorAuth = () => {
     );
   };
 
+  const handleVerify = (e) => {
+    e.preventDefault();
+    verifyCode(otp.join(""));
+  };
+
   const handleResend = () => {
     if (resendCooldown > 0) return;
 
     resendOTP({ email },{
       onSuccess: () => {
         setResendCooldown(60);
-        setOtp("");
+        setOtp(Array(OTP_LENGTH).fill(""));
         setError("");
       },
     });
   };
 
   const handleOtpChange = (value, index) => {
-    const newOtp = otp.split("");
-    newOtp[index] = value.slice(-1);
-    const joined = newOtp.join("");
-    setOtp(joined);
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const nextOtp = [...otp];
+    nextOtp[index] = digit;
+    setOtp(nextOtp);
+    setError("");
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (digit && index < OTP_LENGTH - 1) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       if (nextInput) nextInput.focus();
     }
@@ -82,6 +96,37 @@ const TwoFactorAuth = () => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-input-${index - 1}`);
       if (prevInput) prevInput.focus();
+    }
+  };
+
+  const handleOtpPaste = (e, index) => {
+    const pastedDigits = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (!pastedDigits) return;
+
+    e.preventDefault();
+    setError("");
+
+    if (pastedDigits.length >= OTP_LENGTH) {
+      const fullCode = pastedDigits.slice(0, OTP_LENGTH).split("");
+      setOtp(fullCode);
+      const lastInput = document.getElementById(`otp-input-${OTP_LENGTH - 1}`);
+      if (lastInput) lastInput.focus();
+      verifyCode(fullCode.join(""));
+      return;
+    }
+
+    const nextOtp = [...otp];
+    for (let i = 0; i < pastedDigits.length && index + i < OTP_LENGTH; i += 1) {
+      nextOtp[index + i] = pastedDigits[i];
+    }
+    setOtp(nextOtp);
+
+    const nextFocusIndex = Math.min(index + pastedDigits.length, OTP_LENGTH - 1);
+    const nextInput = document.getElementById(`otp-input-${nextFocusIndex}`);
+    if (nextInput) nextInput.focus();
+
+    if (nextOtp.every(Boolean)) {
+      verifyCode(nextOtp.join(""));
     }
   };
 
@@ -122,20 +167,23 @@ const TwoFactorAuth = () => {
           <form onSubmit={handleVerify} className="space-y-6">
             {/* OTP Inputs */}
             <div className="flex justify-center gap-2">
-              {[0, 1, 2, 3, 4, 5].map((index) => (
+              {Array.from({ length: OTP_LENGTH }, (_, index) => (
                 <Input
                   key={index}
                   id={`otp-input-${index}`}
                   type="text"
                   maxLength={1}
+                  inputMode="numeric"
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
                   className="w-12 h-14 text-center text-xl font-semibold"
                   classNames={{
                     input: "text-center",
                     inputWrapper: "h-14",
                   }}
-                  value={otp[index] || ""}
+                  value={otp[index]}
                   onChange={(e) => handleOtpChange(e.target.value, index)}
                   onKeyDown={(e) => handleKeyDown(e, index)}
+                  onPaste={(e) => handleOtpPaste(e, index)}
                 />
               ))}
             </div>
@@ -162,7 +210,7 @@ const TwoFactorAuth = () => {
               size="lg"
               className="w-full bg-linear-to-r from-[#1e3a8a] to-[#1e3a8a] text-white font-semibold py-6"
               isLoading={isVerifying}
-              isDisabled={otp.length !== 6}
+              isDisabled={!otp.every(Boolean)}
             >
               {isVerifying ? "Verifying..." : "Verify Code"}
             </Button>
