@@ -48,6 +48,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { TwoFactorAuthPage } from "./pages/TwoFactorAuthPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import { Chatbot } from "@/components/Chatbot";
 
 const adminMenuItems = [
   { name: "Dashboard", path: "/admin/dashboard", icon: <LuGauge size={20} /> },
@@ -260,6 +261,8 @@ function App() {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+
+      <Chatbot />
 
       {/* Toast */}
       <ToastContainer
