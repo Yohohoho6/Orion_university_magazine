@@ -47,7 +47,7 @@ const MetricCard = ({ title, value, color, maxValue = 100 }) => {
                             dominantBaseline="middle"
                             className="fill-gray-900 dark:fill-gray-100"
                         >
-                            <tspan x="50%" dy="-0.5em" fontSize="28" fontWeight="bold">
+                            <tspan x="50%" dy="0" fontSize="28" fontWeight="bold">
                                 {typeof value === 'string' && value.includes('%') ? value : numericValue}
                             </tspan>
                         </text>

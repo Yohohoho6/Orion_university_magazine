@@ -13,11 +13,12 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export function ResetPassword() {
+  const OTP_LENGTH = 6;
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "";
   
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -40,13 +41,14 @@ export function ResetPassword() {
   }, [resendCooldown]);
 
   const handleOtpChange = (value, index) => {
-    const newOtp = otp.split("");
-    newOtp[index] = value.slice(-1);
-    const joined = newOtp.join("");
-    setOtp(joined);
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const nextOtp = [...otp];
+    nextOtp[index] = digit;
+    setOtp(nextOtp);
+    setError("");
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (digit && index < OTP_LENGTH - 1) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       if (nextInput) nextInput.focus();
     }
@@ -59,10 +61,37 @@ export function ResetPassword() {
     }
   };
 
-  const onSubmit = (data) => {
+  const handleOtpPaste = (e, index) => {
+    const pastedDigits = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (!pastedDigits) return;
+
+    e.preventDefault();
     setError("");
 
-    if (otp.length !== 6) {
+    if (pastedDigits.length >= OTP_LENGTH) {
+      const fullCode = pastedDigits.slice(0, OTP_LENGTH).split("");
+      setOtp(fullCode);
+      const lastInput = document.getElementById(`otp-input-${OTP_LENGTH - 1}`);
+      if (lastInput) lastInput.focus();
+      return;
+    }
+
+    const nextOtp = [...otp];
+    for (let i = 0; i < pastedDigits.length && index + i < OTP_LENGTH; i += 1) {
+      nextOtp[index + i] = pastedDigits[i];
+    }
+    setOtp(nextOtp);
+
+    const nextFocusIndex = Math.min(index + pastedDigits.length, OTP_LENGTH - 1);
+    const nextInput = document.getElementById(`otp-input-${nextFocusIndex}`);
+    if (nextInput) nextInput.focus();
+  };
+
+  const onSubmit = (data) => {
+    setError("");
+    const otpCode = otp.join("");
+
+    if (otpCode.length !== OTP_LENGTH) {
       setError("Please enter the 6-digit verification code");
       return;
     }
@@ -70,7 +99,7 @@ export function ResetPassword() {
     resetPassword(
       {
         email,
-        code: otp,
+        code: otpCode,
         password: data.password,
         password_confirmation: data.password_confirmation,
       },
@@ -96,7 +125,7 @@ export function ResetPassword() {
       {
         onSuccess: () => {
           setResendCooldown(60);
-          setOtp("");
+          setOtp(Array(OTP_LENGTH).fill(""));
           setError("");
         },
         onError: (err) => {
@@ -175,20 +204,23 @@ export function ResetPassword() {
                 Verification Code
               </label>
               <div className="flex justify-center gap-2">
-                {[0, 1, 2, 3, 4, 5].map((index) => (
+                {Array.from({ length: OTP_LENGTH }, (_, index) => (
                   <Input
                     key={index}
                     id={`otp-input-${index}`}
                     type="text"
                     maxLength={1}
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? "one-time-code" : "off"}
                     className="w-12 h-14 text-center text-xl font-semibold"
                     classNames={{
                       input: "text-center",
                       inputWrapper: "h-14",
                     }}
-                    value={otp[index] || ""}
+                    value={otp[index]}
                     onChange={(e) => handleOtpChange(e.target.value, index)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
+                    onPaste={(e) => handleOtpPaste(e, index)}
                   />
                 ))}
               </div>
@@ -240,7 +272,7 @@ export function ResetPassword() {
               size="lg"
               className="w-full bg-linear-to-r from-[#1e3a8a] to-[#1e3a8a] text-white font-semibold py-6"
               isLoading={isResetting}
-              isDisabled={otp.length !== 6}
+              isDisabled={!otp.every(Boolean)}
             >
               {isResetting ? "Resetting..." : "Reset Password"}
             </Button>
